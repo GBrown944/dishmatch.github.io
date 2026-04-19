@@ -1,0 +1,2713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DishMatch — Find Your Next Favorite Spot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #FAFAF8;
+      --card-bg: #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6B6B6B;
+      --text-tertiary: #9A9A9A;
+      --accent: #D4564E;
+      --accent-soft: #FDECEA;
+      --border: #ECECEC;
+      --heart: #D4564E;
+      --reject: #C2C2C2;
+      --tag-bg: #F3F3F0;
+      --serif: 'DM Serif Display', Georgia, serif;
+      --sans: 'Inter', -apple-system, system-ui, sans-serif;
+      --radius: 16px;
+      --radius-sm: 10px;
+      --shadow-card: 0 1px 4px rgba(0,0,0,0.06), 0 6px 20px rgba(0,0,0,0.04);
+      --shadow-btn: 0 2px 8px rgba(0,0,0,0.10);
+      --nav-height: 72px;
+    }
+
+    html { font-size: 16px; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-shell {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      background: var(--bg);
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--bg);
+      padding: 12px 20px 0;
+      border-bottom: 0.667px solid var(--border);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .logo {
+      font-family: var(--serif);
+      font-size: 24.8px;
+      letter-spacing: -0.3px;
+      color: var(--text-primary);
+    }
+    .logo span { color: var(--accent); }
+
+    .header-actions { display: flex; gap: 6px; }
+
+    .icon-btn {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1.333px solid var(--border);
+      background: var(--card-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--text-tertiary); }
+    .icon-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 1.8; }
+
+    /* ── Filter bar ── */
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      padding-bottom: 12px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      cursor: grab;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+    .filter-bar.dragging { cursor: grabbing; }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 7px 14px;
+      height: 31.333px;
+      border-radius: 100px;
+      border: 1.333px solid var(--border);
+      background: var(--card-bg);
+      font-family: var(--sans);
+      font-size: 12.8px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+      flex-shrink: 0;
+    }
+    .filter-chip:hover { border-color: var(--text-tertiary); }
+    .filter-chip.active {
+      background: var(--text-primary);
+      color: #fff;
+      border-color: var(--text-primary);
+    }
+    .filter-chip svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+    /* ── Filter dropdown ── */
+    .filter-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      padding: 20px;
+      z-index: 200;
+      animation: slideDown 0.2s ease;
+    }
+    .filter-dropdown.show { display: block; }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .filter-dropdown h3 {
+      font-family: var(--serif);
+      font-size: 1.1rem;
+      margin-bottom: 14px;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-row input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+    }
+    .slider-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--text-primary);
+      cursor: pointer;
+      box-shadow: var(--shadow-btn);
+    }
+
+    .slider-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    .tag-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .tag-option {
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tag-option:hover { border-color: var(--text-tertiary); }
+    .tag-option.selected {
+      background: var(--text-primary);
+      color: #fff;
+      border-color: var(--text-primary);
+    }
+
+    .filter-apply-btn {
+      margin-top: 16px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--text-primary);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .filter-apply-btn:hover { opacity: 0.88; }
+
+    .filter-panel-full {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .filter-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .filter-panel-header h3 { margin: 0; }
+    .filter-clear-link {
+      background: none;
+      border: none;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 0;
+    }
+    .filter-clear-link:hover { opacity: 0.75; }
+    .filter-clear-btn {
+      margin-top: 8px;
+      width: 100%;
+      padding: 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .filter-clear-btn:hover { border-color: var(--text-tertiary); color: var(--text-primary); }
+    .filter-panel-section {
+      margin-bottom: 18px;
+    }
+    .filter-panel-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-tertiary);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .filter-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+    }
+    .filter-overlay.show { display: block; }
+
+    /* ── Feed ── */
+    .feed {
+      flex: 1;
+      padding: 16px 20px;
+      padding-bottom: calc(var(--nav-height) + 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .feed-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-tertiary);
+    }
+    .feed-clear-filters {
+      display: none;
+      font-family: var(--sans);
+      font-size: 14.08px;
+      font-weight: 500;
+      color: #d4564e;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+    .feed-clear-filters.visible {
+      display: block;
+    }
+
+    /* ── Restaurant card ── */
+    .restaurant-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 14px rgba(0,0,0,0.05);
+      overflow: hidden;
+      margin-bottom: 12px;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+    }
+    .restaurant-card.removing {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    .restaurant-card.hearting {
+      animation: heartPop 0.45s ease;
+    }
+
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      20% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    .card-image-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+    }
+
+    .card-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 5px 10px;
+      border-radius: 100px;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(8px);
+      font-size: 11.2px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-badge svg { width: 12px; height: 12px; }
+
+    .card-body { padding: 16px 18px 12px; }
+
+    .card-name {
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 25px;
+      margin-bottom: 6px;
+    }
+
+    .card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .meta-tag {
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: var(--tag-bg);
+      font-size: 11.52px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .card-details {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12.48px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .card-details .detail {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-details svg { width: 14px; height: 14px; stroke: var(--text-tertiary); fill: none; stroke-width: 2; }
+
+    .card-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+      font-size: 12.48px;
+      color: var(--text-primary);
+    }
+    .card-rating svg { width: 13px; height: 13px; fill: #F5A623; stroke: none; }
+
+    .card-open-close {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.12px;
+    }
+    .card-open-close svg {
+      width: 15px; height: 15px;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+    }
+    .card-status-open { color: #06C167; }
+    .card-status-closed { color: var(--accent); }
+
+    /* ── Action buttons ── */
+    .card-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 10px 18px 18px;
+      height: 80px;
+    }
+
+    .action-btn {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .action-btn:active { transform: scale(0.92); }
+
+    .action-btn.reject {
+      background: #fff;
+      border: 1.333px solid var(--border);
+    }
+    .action-btn.reject svg { width: 22px; height: 22px; stroke: var(--text-secondary); fill: none; stroke-width: 2.5; }
+    .action-btn.reject:hover { border-color: var(--text-tertiary); }
+    .action-btn.reject:hover svg { stroke: var(--text-secondary); }
+
+    .action-btn.heart { background: var(--accent); }
+    .action-btn.heart svg { width: 24px; height: 24px; fill: #fff; stroke: none; }
+    .action-btn.heart:hover { background: #c4443d; transform: scale(1.06); }
+
+    .action-btn.share {
+      background: #fff;
+      border: 1.333px solid var(--border);
+    }
+    .action-btn.share svg { width: 22px; height: 22px; stroke: var(--text-secondary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .action-btn.share:hover { border-color: var(--text-tertiary); }
+
+    /* ── Heart overlay animation ── */
+    .heart-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .heart-overlay svg {
+      width: 64px; height: 64px;
+      fill: var(--accent);
+      opacity: 0;
+      transform: scale(0.4);
+      animation: heartBurst 0.55s ease forwards;
+    }
+    @keyframes heartBurst {
+      0% { opacity: 0; transform: scale(0.4); }
+      30% { opacity: 1; transform: scale(1.15); }
+      60% { opacity: 1; transform: scale(0.95); }
+      100% { opacity: 0; transform: scale(1.05); }
+    }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      height: var(--nav-height);
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 300;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 16px;
+      cursor: pointer;
+      border: none;
+      background: none;
+      transition: color 0.15s;
+      position: relative;
+    }
+    .nav-item svg { width: 24px; height: 24px; stroke-width: 1.8; }
+    .nav-item span {
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .nav-item.active { color: var(--accent); }
+    .nav-item.active svg { stroke: var(--accent); fill: none; }
+    .nav-item:not(.active) { color: var(--text-tertiary); }
+    .nav-item:not(.active) svg { stroke: var(--text-tertiary); fill: none; }
+
+    .nav-badge {
+      position: absolute;
+      top: 4px;
+      right: 8px;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* ── Saved screen ── */
+    .saved-screen {
+      display: none;
+      flex: 1;
+      padding: 16px 20px;
+      padding-bottom: calc(var(--nav-height) + 24px);
+      flex-direction: column;
+    }
+    .saved-screen.visible { display: flex; }
+    .feed.hidden { display: none; }
+
+    .saved-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .saved-header h2 {
+      font-family: var(--serif);
+      font-size: 1.5rem;
+    }
+
+    .saved-count {
+      font-size: 0.8rem;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    .saved-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .saved-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      animation: fadeUp 0.3s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .saved-card-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+    }
+
+    .saved-card-body { padding: 10px 12px 12px; }
+
+    .saved-card-name {
+      font-family: var(--serif);
+      font-size: 0.9rem;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .saved-card-info {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .saved-card-remove {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-top: 8px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: none;
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.15s;
+    }
+    .saved-card-remove:hover { border-color: var(--accent); color: var(--accent); }
+    .saved-card-remove svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .empty-saved {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+      color: var(--text-tertiary);
+      padding: 40px 20px;
+    }
+    .empty-saved svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+    .empty-saved p { font-size: 0.85rem; line-height: 1.5; }
+
+    .empty-feed {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+      color: var(--text-tertiary);
+      padding: 60px 20px;
+    }
+    .empty-feed.visible { display: flex; }
+    .empty-feed svg { width: 48px; height: 48px; stroke: var(--border); fill: none; stroke-width: 1.5; }
+    .empty-feed p { font-size: 0.85rem; line-height: 1.5; }
+    .empty-feed button {
+      margin-top: 8px;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 100px;
+      background: var(--text-primary);
+      color: #fff;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    ::-webkit-scrollbar { width: 0; }
+
+    /* ── Restaurant Profile Panel ── */
+    .profile-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 400;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .profile-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .profile-panel {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      width: 100%;
+      max-width: 430px;
+      height: 100dvh;
+      background: var(--bg);
+      z-index: 500;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      scrollbar-width: none;
+    }
+    .profile-panel::-webkit-scrollbar { display: none; }
+    .profile-panel.open {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .profile-close-bar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(250,250,248,0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .profile-close-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      border: 1.5px solid var(--border);
+      background: var(--card-bg);
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .profile-close-btn:hover { border-color: var(--text-tertiary); }
+    .profile-close-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .profile-close-bar-title {
+      font-family: var(--serif);
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+    }
+
+    /* ── Photo carousel ── */
+    .profile-carousel {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      background: var(--border);
+    }
+
+    .carousel-track {
+      display: flex;
+      height: 100%;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .carousel-track img {
+      min-width: 100%;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    .carousel-dots {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+    }
+
+    .carousel-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0;
+    }
+    .carousel-dot.active {
+      background: #fff;
+      width: 20px;
+      border-radius: 4px;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transition: opacity 0.15s;
+      z-index: 5;
+    }
+    .carousel-arrow:hover { opacity: 0.85; }
+    .carousel-arrow svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; }
+    .carousel-arrow.left { left: 12px; }
+    .carousel-arrow.right { right: 12px; }
+
+    /* ── Profile body ── */
+    .profile-body {
+      padding: 20px 20px 120px;
+    }
+
+    .profile-name {
+      font-family: var(--serif);
+      font-size: 25.6px;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .profile-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .profile-info-row {
+      display: none;
+    }
+
+    /* ── Restaurant bio ── */
+    .profile-bio {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-bottom: 15.667px;
+      margin-bottom: 20px;
+      border-bottom: 0.667px solid var(--border);
+    }
+    .profile-bio-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .profile-bio-stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.12px;
+      font-family: var(--sans);
+      color: var(--text-secondary);
+      line-height: normal;
+    }
+    .profile-bio-stat svg {
+      flex-shrink: 0;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+    }
+    .profile-bio-stat .bio-rating-icon {
+      width: 14px; height: 14px;
+      fill: #F5A623; stroke: none;
+    }
+    .profile-bio-stat .bio-reviews-icon {
+      width: 15px; height: 15px;
+    }
+    .profile-bio-stat .bio-distance-icon {
+      width: 15px; height: 13px;
+    }
+    .bio-rating-val {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 13.12px;
+    }
+    .profile-bio-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 13.12px;
+      font-family: var(--sans);
+      color: var(--text-secondary);
+      line-height: normal;
+    }
+    .profile-bio-row svg {
+      width: 15px; height: 15px;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+    .hours-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 13.12px;
+      color: var(--text-secondary);
+      line-height: normal;
+    }
+    .hours-toggle-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .hours-toggle svg.hours-icon {
+      width: 15px; height: 15px;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+    .hours-status-open { color: #06C167; }
+    .hours-status-closed { color: var(--accent); }
+    .hours-chevron {
+      width: 8px; height: 4px;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    .hours-toggle.expanded .hours-chevron { transform: rotate(180deg); }
+    .hours-schedule {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 0 0 20px;
+      font-size: 13.12px;
+      color: var(--text-secondary);
+    }
+    .hours-schedule.visible { display: flex; }
+    .hours-schedule-row {
+      display: flex;
+      justify-content: space-between;
+      max-width: 280px;
+    }
+    .hours-schedule-day { font-weight: 500; color: var(--text-primary); min-width: 40px; }
+
+    /* ── Section headers ── */
+    .profile-section-title {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+    }
+
+    /* ── Menu ── */
+    .menu-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 14px 16px;
+      background: var(--card-bg);
+      gap: 12px;
+    }
+
+    .menu-item-info { flex: 1; }
+
+    .menu-item-name {
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 3px;
+    }
+
+    .menu-item-desc {
+      font-size: 0.73rem;
+      color: var(--text-tertiary);
+      line-height: 1.4;
+    }
+
+    .menu-item-price {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .menu-category {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-tertiary);
+      padding: 10px 16px 6px;
+      background: var(--tag-bg);
+    }
+
+    /* ── Reviews ── */
+    .reviews-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+
+    .review-card {
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .review-author {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .review-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--tag-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .review-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .review-date {
+      font-size: 0.68rem;
+      color: var(--text-tertiary);
+    }
+
+    .review-stars {
+      display: flex;
+      gap: 2px;
+    }
+    .review-stars svg { width: 12px; height: 12px; fill: #F5A623; stroke: none; }
+    .review-stars svg.empty { fill: var(--border); }
+
+    .review-text {
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: var(--text-secondary);
+    }
+
+    .review-source {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 8px;
+      font-size: 0.65rem;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+    .review-source svg { width: 12px; height: 12px; }
+
+    /* ── Profile action bar (sticky bottom with circle buttons) ── */
+    .profile-action-bar {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 0.667px solid var(--border);
+      padding: 6.5px 20px;
+      padding-bottom: calc(6.5px + env(safe-area-inset-bottom, 0));
+      z-index: 510;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .profile-action-bar.visible { display: flex; }
+
+    .profile-action-btns {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .profile-action-btn {
+      width: 52px; height: 52px;
+      border-radius: 26px;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      position: relative;
+    }
+    .profile-action-btn:active { transform: scale(0.92); }
+
+    .profile-action-btn.heart-btn {
+      background: var(--accent);
+    }
+    .profile-action-btn.heart-btn svg { width: 24px; height: 24px; fill: #fff; stroke: none; }
+    .profile-action-btn.heart-btn:hover { background: #c4443d; transform: scale(1.06); }
+
+    .profile-action-btn.x-btn {
+      background: #fff;
+      border: 1.333px solid var(--border);
+    }
+    .profile-action-btn.x-btn svg { width: 22px; height: 22px; stroke: var(--text-secondary); fill: none; stroke-width: 2.5; }
+    .profile-action-btn.x-btn:hover { border-color: var(--text-tertiary); }
+
+    .profile-action-btn.order-btn {
+      background: #fff;
+      border: 1px solid var(--border);
+    }
+    .profile-action-btn.order-btn:hover { border-color: var(--text-tertiary); }
+    .profile-action-btn.order-btn svg { width: 24px; height: 24px; fill: var(--accent); stroke: none; }
+
+    .profile-action-btn.share-btn {
+      background: #fff;
+      border: 1.333px solid var(--border);
+    }
+    .profile-action-btn.share-btn:hover { border-color: var(--text-tertiary); }
+    .profile-action-btn.share-btn svg { width: 22px; height: 22px; stroke: var(--text-secondary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Order Menu Popup ── */
+    .order-menu-popup {
+      position: absolute;
+      bottom: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 9px;
+      align-items: center;
+      z-index: 520;
+      animation: orderMenuIn 0.2s ease;
+    }
+    .order-menu-popup.visible { display: flex; }
+
+    @keyframes orderMenuIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.95); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    }
+
+    .order-menu-btn {
+      width: 124.667px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: var(--sans);
+      font-size: 11.52px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.15s;
+      line-height: 1;
+    }
+    .order-menu-btn:active { transform: scale(0.97); }
+    .order-menu-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .order-menu-btn.doordash { background: #FF3008; }
+    .order-menu-btn.doordash:hover { opacity: 0.9; }
+
+    .order-menu-btn.ubereats { background: #06C167; }
+    .order-menu-btn.ubereats:hover { opacity: 0.9; }
+
+    .order-menu-btn.website { background: #0660C1; }
+    .order-menu-btn.website:hover { opacity: 0.9; }
+
+    .order-menu-btn.call-btn { background: var(--text-primary); }
+    .order-menu-btn.call-btn:hover { opacity: 0.88; }
+    .order-menu-btn.call-btn svg { stroke: #fff; fill: none; stroke-width: 2; }
+
+    .order-menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 515;
+    }
+    .order-menu-overlay.visible { display: block; }
+
+    /* ── Search overlay ── */
+    .search-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.75);
+      flex-direction: column;
+      align-items: center;
+    }
+    .search-overlay.visible { display: flex; }
+
+    .search-container {
+      width: 100%;
+      max-width: 430px;
+      padding: 14px 20px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input-wrap svg.search-input-icon {
+      position: absolute;
+      left: 12px;
+      width: 16px; height: 16px;
+      stroke: var(--text-tertiary);
+      fill: none;
+      stroke-width: 2;
+      pointer-events: none;
+    }
+    .search-input {
+      width: 100%;
+      height: 42px;
+      border: 1.5px solid var(--border);
+      border-radius: 21px;
+      background: var(--card-bg);
+      padding: 0 14px 0 38px;
+      font-family: var(--sans);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input::placeholder { color: var(--text-tertiary); }
+    .search-input:focus { border-color: var(--accent); }
+
+    .search-clear-btn {
+      position: absolute;
+      right: 10px;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      border: none;
+      background: var(--tag-bg);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+    .search-clear-btn.visible { display: flex; }
+    .search-clear-btn svg { width: 12px; height: 12px; stroke: var(--text-secondary); fill: none; stroke-width: 2.5; }
+
+    .search-cancel-btn {
+      background: none;
+      border: none;
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--accent);
+      cursor: pointer;
+      white-space: nowrap;
+      padding: 4px 0;
+    }
+
+    .search-results-hint {
+      display: none;
+      max-width: 430px;
+      width: 100%;
+      padding: 10px 20px;
+      background: var(--bg);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .search-results-hint.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-top">
+      <div class="logo">dish<span>match</span></div>
+      <div class="header-actions">
+        <button class="icon-btn" title="Filters" onclick="toggleFilterPanel()">
+          <svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+        </button>
+        <button class="icon-btn" title="Search" onclick="openSearch()">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-chip" data-filter="sort" id="sortChip">
+        <svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 4l3 3 3-3"/><path d="M6 7v10"/></svg>
+        Sort
+      </button>
+      <button class="filter-chip active" data-filter="distance" id="distanceChip">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <span id="distanceLabel">Within 5 mi</span>
+      </button>
+      <button class="filter-chip" data-filter="cuisine" id="cuisineChip">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        Cuisine
+      </button>
+      <button class="filter-chip" data-filter="establishment" id="establishmentChip">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Type
+      </button>
+      <button class="filter-chip" data-filter="hours" id="hoursChip">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Hours
+      </button>
+      <button class="filter-chip" data-filter="rating" id="ratingChip">
+        <svg viewBox="0 0 24 24" style="fill:#F5A623;stroke:none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Rating
+      </button>
+    </div>
+
+    <!-- Distance dropdown -->
+    <div class="filter-dropdown" id="distanceDropdown">
+      <h3>Distance</h3>
+      <div class="slider-row">
+        <input type="range" id="distanceSlider" min="1" max="25" value="5" step="1">
+        <span class="slider-value" id="distanceValue">5 mi</span>
+      </div>
+      <button class="filter-apply-btn" onclick="applyDistance()">Apply</button>
+    </div>
+
+    <!-- Cuisine dropdown -->
+    <div class="filter-dropdown" id="cuisineDropdown">
+      <h3>Food Culture</h3>
+      <div class="tag-grid" id="cuisineTags"></div>
+      <button class="filter-apply-btn" onclick="applyCuisine()">Apply</button>
+    </div>
+
+    <!-- Establishment dropdown -->
+    <div class="filter-dropdown" id="establishmentDropdown">
+      <h3>Establishment Type</h3>
+      <div class="tag-grid" id="establishmentTags"></div>
+      <button class="filter-apply-btn" onclick="applyEstablishment()">Apply</button>
+    </div>
+
+    <!-- Sort dropdown -->
+    <div class="filter-dropdown" id="sortDropdown">
+      <h3>Sort By</h3>
+      <div class="tag-grid" id="sortOptions">
+        <div class="tag-option selected" data-sort="default" onclick="selectSort(this)">Default</div>
+        <div class="tag-option" data-sort="distance-asc" onclick="selectSort(this)">Nearest First</div>
+        <div class="tag-option" data-sort="distance-desc" onclick="selectSort(this)">Farthest First</div>
+        <div class="tag-option" data-sort="price-asc" onclick="selectSort(this)">Price: Low to High</div>
+        <div class="tag-option" data-sort="price-desc" onclick="selectSort(this)">Price: High to Low</div>
+        <div class="tag-option" data-sort="rating" onclick="selectSort(this)">Highest Rated</div>
+      </div>
+      <button class="filter-apply-btn" onclick="applySort()">Apply</button>
+    </div>
+
+    <!-- Hours dropdown -->
+    <div class="filter-dropdown" id="hoursDropdown">
+      <h3>Hours</h3>
+      <div class="tag-grid" id="hoursOptions">
+        <div class="tag-option selected" data-hours="all" onclick="selectHours(this)">All</div>
+        <div class="tag-option" data-hours="open" onclick="selectHours(this)">Open Now</div>
+        <div class="tag-option" data-hours="closed" onclick="selectHours(this)">Closed</div>
+      </div>
+      <button class="filter-apply-btn" onclick="applyHours()">Apply</button>
+    </div>
+
+    <!-- Rating dropdown -->
+    <div class="filter-dropdown" id="ratingDropdown">
+      <h3>Minimum Rating</h3>
+      <div class="tag-grid" id="ratingOptions">
+        <div class="tag-option selected" data-rating="0" onclick="selectRating(this)">Any</div>
+        <div class="tag-option" data-rating="3" onclick="selectRating(this)">3.0+</div>
+        <div class="tag-option" data-rating="3.5" onclick="selectRating(this)">3.5+</div>
+        <div class="tag-option" data-rating="4" onclick="selectRating(this)">4.0+</div>
+        <div class="tag-option" data-rating="4.5" onclick="selectRating(this)">4.5+</div>
+      </div>
+      <button class="filter-apply-btn" onclick="applyRating()">Apply</button>
+    </div>
+
+    <!-- Master filter panel (opens from icon) -->
+    <div class="filter-dropdown filter-panel-full" id="filterPanelFull">
+      <div class="filter-panel-header">
+        <h3>All Filters</h3>
+        <button class="filter-clear-link" onclick="clearAllFilters()">Clear All</button>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Distance</label>
+        <div class="slider-row">
+          <input type="range" id="distanceSliderFull" min="1" max="25" value="5" step="1">
+          <span class="slider-value" id="distanceValueFull">5 mi</span>
+        </div>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Cuisine</label>
+        <div class="tag-grid" id="cuisineTagsFull"></div>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Establishment</label>
+        <div class="tag-grid" id="establishmentTagsFull"></div>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Sort By</label>
+        <div class="tag-grid" id="sortOptionsFull">
+          <div class="tag-option selected" data-sort="default" onclick="selectSort(this)">Default</div>
+          <div class="tag-option" data-sort="distance-asc" onclick="selectSort(this)">Nearest First</div>
+          <div class="tag-option" data-sort="distance-desc" onclick="selectSort(this)">Farthest First</div>
+          <div class="tag-option" data-sort="price-asc" onclick="selectSort(this)">Price: Low to High</div>
+          <div class="tag-option" data-sort="price-desc" onclick="selectSort(this)">Price: High to Low</div>
+          <div class="tag-option" data-sort="rating" onclick="selectSort(this)">Highest Rated</div>
+        </div>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Hours</label>
+        <div class="tag-grid" id="hoursOptionsFull">
+          <div class="tag-option selected" data-hours="all" onclick="selectHours(this)">All</div>
+          <div class="tag-option" data-hours="open" onclick="selectHours(this)">Open Now</div>
+          <div class="tag-option" data-hours="closed" onclick="selectHours(this)">Closed</div>
+        </div>
+      </div>
+      <div class="filter-panel-section">
+        <label class="filter-panel-label">Minimum Rating</label>
+        <div class="tag-grid" id="ratingOptionsFull">
+          <div class="tag-option selected" data-rating="0" onclick="selectRating(this)">Any</div>
+          <div class="tag-option" data-rating="3" onclick="selectRating(this)">3.0+</div>
+          <div class="tag-option" data-rating="3.5" onclick="selectRating(this)">3.5+</div>
+          <div class="tag-option" data-rating="4" onclick="selectRating(this)">4.0+</div>
+          <div class="tag-option" data-rating="4.5" onclick="selectRating(this)">4.5+</div>
+        </div>
+      </div>
+      <button class="filter-apply-btn" onclick="applyFullFilter()">Apply All Filters</button>
+      <button class="filter-clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
+    </div>
+
+    <div class="filter-overlay" id="filterOverlay"></div>
+  </header>
+
+  <!-- Search overlay -->
+  <div class="search-overlay" id="searchOverlay" onclick="handleSearchOverlayClick(event)">
+    <div class="search-container">
+      <div class="search-input-wrap">
+        <svg class="search-input-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="search-input" id="searchInput" placeholder="Search menu items" autocomplete="off">
+        <button class="search-clear-btn" id="searchClearBtn" onclick="clearSearch()">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <button class="search-cancel-btn" onclick="closeSearch()">Cancel</button>
+    </div>
+    <div class="search-results-hint" id="searchResultsHint"></div>
+  </div>
+
+  <!-- Feed -->
+  <main class="feed" id="feed">
+    <div class="feed-header">
+      <span class="feed-label" id="feedLabel">Restaurants near you</span>
+      <button class="feed-clear-filters" id="feedClearFilters" onclick="clearAllFilters()">Clear Filters</button>
+    </div>
+    <div id="cardContainer"></div>
+    <div class="empty-feed" id="emptyFeed">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+      <p>You've seen all the restaurants nearby.<br>Try adjusting your filters!</p>
+      <button onclick="resetFeed()">Refresh</button>
+    </div>
+  </main>
+
+  <!-- Saved screen -->
+  <div class="saved-screen" id="savedScreen">
+    <div class="saved-header">
+      <h2>Saved</h2>
+      <span class="saved-count" id="savedCount">0 places</span>
+    </div>
+    <div class="saved-grid" id="savedGrid"></div>
+    <div class="empty-saved" id="emptySaved">
+      <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <p>No saved restaurants yet.<br>Heart a restaurant to save it here.</p>
+    </div>
+  </div>
+
+  <!-- Restaurant Profile Panel -->
+  <div class="profile-overlay" id="profileOverlay" onclick="closeProfile()"></div>
+  <div class="profile-panel" id="profilePanel">
+    <div class="profile-close-bar">
+      <button class="profile-close-btn" onclick="closeProfile()">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <span class="profile-close-bar-title" id="profileBarTitle"></span>
+      <div style="width:70px;"></div>
+    </div>
+
+    <div class="profile-carousel" id="profileCarousel">
+      <div class="carousel-track" id="carouselTrack"></div>
+      <button class="carousel-arrow left" onclick="carouselPrev()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="carousel-arrow right" onclick="carouselNext()"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+      <div class="carousel-dots" id="carouselDots"></div>
+    </div>
+
+    <div class="profile-body" id="profileBody"></div>
+  </div>
+
+  <div class="order-menu-overlay" id="orderMenuOverlay" onclick="closeOrderMenu()"></div>
+  <div class="profile-action-bar" id="profileActionBar">
+    <div class="profile-action-btns">
+      <button class="profile-action-btn heart-btn" id="profileHeartBtn" title="Save">
+        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      </button>
+      <button class="profile-action-btn x-btn" id="profileXBtn" title="Pass">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div style="position:relative;">
+        <button class="profile-action-btn order-btn" id="profileOrderBtn" title="Order Food" onclick="toggleOrderMenu()">
+          <svg viewBox="0 0 24 24"><path d="M10.5 4C10.5 3.17 11.17 2.5 12 2.5C12.83 2.5 13.5 3.17 13.5 4C13.5 4.83 12.83 5.5 12 5.5C11.17 5.5 10.5 4.83 10.5 4Z"/><path d="M4 17C4 11.5 7.5 7 12 7C16.5 7 20 11.5 20 17L4 17Z"/><path d="M2.5 17.5L21.5 17.5C22.05 17.5 22.5 17.95 22.5 18.5C22.5 19.05 22.05 19.5 21.5 19.5L2.5 19.5C1.95 19.5 1.5 19.05 1.5 18.5C1.5 17.95 1.95 17.5 2.5 17.5Z"/></svg>
+        </button>
+        <div class="order-menu-popup" id="orderMenuPopup">
+          <button class="order-menu-btn doordash" onclick="event.stopPropagation(); window.open('https://doordash.com','_blank')">
+            <svg viewBox="0 0 24 24" style="fill:#fff;stroke:none"><path d="M23.07 9.05C21.57 4.1 17.07 1 12 1S2.43 4.1.93 9.05a1.42 1.42 0 0 0 .93 1.78 1.42 1.42 0 0 0 1.78-.93A8.58 8.58 0 0 1 12 3.83a8.58 8.58 0 0 1 8.36 6.07 1.42 1.42 0 0 0 1.78.93 1.42 1.42 0 0 0 .93-1.78z"/><circle cx="12" cy="16" r="3"/></svg>
+            DoorDash
+          </button>
+          <button class="order-menu-btn ubereats" onclick="event.stopPropagation(); window.open('https://ubereats.com','_blank')">
+            <svg viewBox="0 0 24 24" style="fill:#fff;stroke:none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15H9V7h2v10zm4 0h-2v-6h2v6z"/></svg>
+            Uber Eats
+          </button>
+          <button class="order-menu-btn website" onclick="event.stopPropagation(); openRestaurantWebsite()">
+            <svg viewBox="0 0 24 24" style="fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/></svg>
+            Website
+          </button>
+          <button class="order-menu-btn call-btn" id="orderCallBtn" onclick="event.stopPropagation()">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            Call
+          </button>
+        </div>
+      </div>
+      <button class="profile-action-btn share-btn" id="profileShareBtn" title="Share" onclick="shareRestaurant()">
+        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="navDiscover" onclick="showScreen('discover')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
+      <span>Discover</span>
+    </button>
+    <button class="nav-item" id="navSaved" onclick="showScreen('saved')">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <span>Saved</span>
+      <span class="nav-badge" id="navBadge" style="display:none;">0</span>
+    </button>
+  </nav>
+</div>
+
+<script src="https://mcp.figma.com/mcp/html-to-design/capture.js" async></script>
+<script>
+const restaurants = [
+  {
+    id: 1, name: "Sakura Ramen House", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=600&h=400&fit=crop", cuisine: "Japanese", establishment: "Sit-down", price: "$$", distance: 0.8, rating: 4.7, reviews: 342, phone: "(555) 123-4567", address: "44444 W Jolly Rd, Nowhere, MI 49203", hours: { status: "Open", closes: "10PM", schedule: ["Mon: 11AM – 10PM", "Tue: 11AM – 10PM", "Wed: 11AM – 10PM", "Thu: 11AM – 10PM", "Fri: 11AM – 11PM", "Sat: 12PM – 11PM", "Sun: 12PM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1623341214825-9f4f963727da?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1555126634-323283e090fa?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Starters", items: [{ name: "Edamame", desc: "Steamed soy beans with sea salt", price: "$5" }, { name: "Gyoza", desc: "Pan-fried pork dumplings (6pc)", price: "$8" }] },
+      { cat: "Ramen", items: [{ name: "Tonkotsu Ramen", desc: "Rich pork bone broth, chashu, soft egg, nori", price: "$16" }, { name: "Miso Ramen", desc: "White miso broth, corn, butter, ground pork", price: "$15" }, { name: "Spicy Tantanmen", desc: "Sesame chili broth, minced pork, bok choy", price: "$17" }] },
+      { cat: "Sides", items: [{ name: "Extra Chashu", desc: "Three slices of braised pork belly", price: "$4" }, { name: "Rice Bowl", desc: "Steamed Japanese short grain rice", price: "$3" }] }
+    ],
+    googleReviews: [
+      { author: "Sarah M.", date: "2 weeks ago", stars: 5, text: "Best ramen I've had outside of Japan! The tonkotsu broth is incredibly rich and the noodles are perfectly cooked. Staff is super friendly too." },
+      { author: "David K.", date: "1 month ago", stars: 4, text: "Great spot for a quick lunch. The spicy tantanmen has a serious kick. Only wish they had more seating." },
+      { author: "Emily R.", date: "3 weeks ago", stars: 5, text: "Absolutely love this place. The gyoza are crispy on the bottom and juicy inside. We come here every week now." }
+    ]
+  },
+  {
+    id: 2, name: "Taqueria El Sol", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=600&h=400&fit=crop", cuisine: "Mexican", establishment: "Food Truck", price: "$", distance: 1.2, rating: 4.5, reviews: 189, phone: "(555) 234-5678", address: "812 S Main St, Riverside, MI 48201", hours: { status: "Open", closes: "9PM", schedule: ["Mon: Closed", "Tue: 10AM – 9PM", "Wed: 10AM – 9PM", "Thu: 10AM – 9PM", "Fri: 10AM – 10PM", "Sat: 10AM – 10PM", "Sun: 11AM – 8PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1613514785940-daed07799d9b?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Tacos", items: [{ name: "Carne Asada Taco", desc: "Grilled steak, onion, cilantro, salsa verde", price: "$4" }, { name: "Al Pastor Taco", desc: "Marinated pork, pineapple, onion, cilantro", price: "$4" }, { name: "Fish Taco", desc: "Beer-battered cod, cabbage slaw, chipotle crema", price: "$5" }] },
+      { cat: "Burritos", items: [{ name: "Super Burrito", desc: "Rice, beans, meat, cheese, sour cream, guac", price: "$12" }, { name: "Veggie Burrito", desc: "Grilled peppers, rice, black beans, cheese", price: "$10" }] },
+      { cat: "Sides", items: [{ name: "Chips & Guac", desc: "House-made tortilla chips, fresh guacamole", price: "$6" }, { name: "Elote", desc: "Grilled Mexican street corn, mayo, cotija", price: "$5" }] }
+    ],
+    googleReviews: [
+      { author: "Marcus T.", date: "1 week ago", stars: 5, text: "The al pastor tacos are unreal. Perfectly seasoned meat with that caramelized pineapple. Best food truck in the area hands down." },
+      { author: "Lisa P.", date: "3 weeks ago", stars: 4, text: "Solid burritos, generous portions. The elote is a must-try. Line can get long at lunch though." },
+      { author: "James W.", date: "2 months ago", stars: 5, text: "Authentic flavors that remind me of the taquerias in Mexico City. The fish tacos are incredible." }
+    ]
+  },
+  {
+    id: 3, name: "Bella Napoli", image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=600&h=400&fit=crop", cuisine: "Italian", establishment: "Sit-down", price: "$$$", distance: 2.1, rating: 4.8, reviews: 527, phone: "(555) 345-6789", address: "2200 Trattoria Ln, Lakewood, MI 48075", hours: { status: "Closed", opens: "5PM", schedule: ["Mon: Closed", "Tue: 5PM – 10PM", "Wed: 5PM – 10PM", "Thu: 5PM – 10PM", "Fri: 5PM – 11PM", "Sat: 4PM – 11PM", "Sun: 4PM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Antipasti", items: [{ name: "Bruschetta", desc: "Grilled bread, tomato, basil, garlic, EVOO", price: "$10" }, { name: "Burrata", desc: "Fresh burrata, heirloom tomatoes, basil pesto", price: "$14" }] },
+      { cat: "Pizza", items: [{ name: "Margherita", desc: "San Marzano tomatoes, fresh mozzarella, basil", price: "$16" }, { name: "Diavola", desc: "Spicy salami, mozzarella, chili flakes, honey drizzle", price: "$18" }] },
+      { cat: "Pasta", items: [{ name: "Cacio e Pepe", desc: "Pecorino, black pepper, handmade tonnarelli", price: "$19" }, { name: "Bolognese", desc: "Slow-cooked meat ragu, fresh pappardelle", price: "$21" }] }
+    ],
+    googleReviews: [
+      { author: "Amanda C.", date: "5 days ago", stars: 5, text: "The cacio e pepe is perfection. Simple ingredients done flawlessly. Beautiful ambiance too — feels like you're in Rome." },
+      { author: "Robert H.", date: "2 weeks ago", stars: 5, text: "Best Italian in the city. The burrata appetizer alone is worth the trip. Make reservations — it fills up fast." },
+      { author: "Karen L.", date: "1 month ago", stars: 4, text: "Wonderful pizza, crispy and authentic Neapolitan style. Service was a bit slow on a Saturday night but the food makes up for it." }
+    ]
+  },
+  {
+    id: 4, name: "Seoul Kitchen", image: "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=600&h=400&fit=crop", cuisine: "Korean", establishment: "Fast Casual", price: "$$", distance: 1.7, rating: 4.6, reviews: 213, phone: "(555) 456-7890", address: "1550 Korea Way, Eastside, MI 48207", hours: { status: "Open", closes: "9:30PM", schedule: ["Mon: 11AM – 9:30PM", "Tue: 11AM – 9:30PM", "Wed: 11AM – 9:30PM", "Thu: 11AM – 9:30PM", "Fri: 11AM – 10PM", "Sat: 11AM – 10PM", "Sun: 12PM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1498654896293-37aacf113fd9?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1590301157890-4810ed352733?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1583224964978-2257b960c3d3?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1635363638580-c2809d049eee?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Bowls", items: [{ name: "Bibimbap", desc: "Mixed rice, vegetables, egg, gochujang sauce", price: "$14" }, { name: "Bulgogi Bowl", desc: "Marinated beef, rice, pickled radish, sesame", price: "$15" }] },
+      { cat: "BBQ", items: [{ name: "Korean Fried Chicken", desc: "Double-fried, sweet chili or soy garlic glaze", price: "$13" }, { name: "Galbi", desc: "Grilled short ribs, marinated in soy and pear", price: "$22" }] },
+      { cat: "Sides", items: [{ name: "Kimchi", desc: "House-fermented napa cabbage kimchi", price: "$4" }, { name: "Japchae", desc: "Sweet potato glass noodles, vegetables, sesame", price: "$9" }] }
+    ],
+    googleReviews: [
+      { author: "Chris N.", date: "1 week ago", stars: 5, text: "The Korean fried chicken is addictive. Perfectly crispy with just the right amount of sweet chili glaze. Great value too." },
+      { author: "Yuna K.", date: "3 weeks ago", stars: 4, text: "Authentic Korean flavors. The bibimbap reminds me of home cooking. Kimchi is properly fermented, not that store-bought stuff." },
+      { author: "Tom B.", date: "1 month ago", stars: 5, text: "Galbi is melt-in-your-mouth tender. Fast casual format means quick service without sacrificing quality. Love this place." }
+    ]
+  },
+  {
+    id: 5, name: "Bombay Street Bites", image: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=600&h=400&fit=crop", cuisine: "Indian", establishment: "Food Truck", price: "$", distance: 3.4, rating: 4.4, reviews: 156, phone: "(555) 567-8901", address: "975 Spice Market Blvd, Dearborn, MI 48126", hours: { status: "Open", closes: "8PM", schedule: ["Mon: 11AM – 8PM", "Tue: 11AM – 8PM", "Wed: 11AM – 8PM", "Thu: 11AM – 8PM", "Fri: 11AM – 9PM", "Sat: 11AM – 9PM", "Sun: Closed"] },
+    photos: [
+      "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1596797038530-2c107229654b?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Street Food", items: [{ name: "Samosa Chaat", desc: "Crispy samosas, chickpeas, yogurt, tamarind", price: "$7" }, { name: "Pav Bhaji", desc: "Spiced mashed vegetables, buttered buns", price: "$9" }] },
+      { cat: "Mains", items: [{ name: "Butter Chicken", desc: "Creamy tomato curry, tender chicken, naan", price: "$13" }, { name: "Chole Bhature", desc: "Spiced chickpeas with fried bread", price: "$10" }] },
+      { cat: "Drinks", items: [{ name: "Mango Lassi", desc: "Creamy yogurt smoothie with Alphonso mango", price: "$5" }, { name: "Masala Chai", desc: "Spiced tea with milk and cardamom", price: "$3" }] }
+    ],
+    googleReviews: [
+      { author: "Priya S.", date: "4 days ago", stars: 5, text: "Finally, authentic Indian street food! The samosa chaat takes me back to the streets of Mumbai. Mango lassi is thick and creamy." },
+      { author: "Mike D.", date: "2 weeks ago", stars: 4, text: "Butter chicken is rich and flavorful. Great portions for the price. The naan is fresh and pillowy." },
+      { author: "Rachel G.", date: "1 month ago", stars: 4, text: "Love the spice levels here — they don't tone it down. Pav bhaji is comfort food at its finest." }
+    ]
+  },
+  {
+    id: 6, name: "Le Petit Bistro", image: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&h=400&fit=crop", cuisine: "French", establishment: "Sit-down", price: "$$$$", distance: 4.2, rating: 4.9, reviews: 412, phone: "(555) 678-9012", address: "88 Rue de Paris, Grosse Pointe, MI 48230", hours: { status: "Closed", opens: "6PM", schedule: ["Mon: Closed", "Tue: Closed", "Wed: 6PM – 10PM", "Thu: 6PM – 10PM", "Fri: 5PM – 11PM", "Sat: 5PM – 11PM", "Sun: 5PM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Entrées", items: [{ name: "French Onion Soup", desc: "Caramelized onions, gruyère crouton", price: "$14" }, { name: "Escargot", desc: "Burgundy snails, garlic herb butter", price: "$16" }] },
+      { cat: "Plats", items: [{ name: "Duck Confit", desc: "Slow-cooked leg, lentils, red wine jus", price: "$34" }, { name: "Steak Frites", desc: "Hanger steak, béarnaise, hand-cut fries", price: "$32" }, { name: "Bouillabaisse", desc: "Provençal seafood stew, rouille, croutons", price: "$36" }] },
+      { cat: "Desserts", items: [{ name: "Crème Brûlée", desc: "Vanilla bean custard, caramelized sugar", price: "$12" }, { name: "Tarte Tatin", desc: "Caramelized apple tart, crème fraîche", price: "$13" }] }
+    ],
+    googleReviews: [
+      { author: "Catherine B.", date: "1 week ago", stars: 5, text: "An exquisite dining experience. The duck confit was cooked to perfection — crispy skin, tender meat. Wine pairing was superb." },
+      { author: "Jonathan P.", date: "2 weeks ago", stars: 5, text: "Feels like a Parisian bistro. The bouillabaisse was the best I've had outside of Marseille. Impeccable service." },
+      { author: "Diana F.", date: "3 weeks ago", stars: 5, text: "Crème brûlée is dreamy. The steak frites is a masterclass in simplicity done right. Worth every penny." }
+    ]
+  },
+  {
+    id: 7, name: "Pho Saigon", image: "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=600&h=400&fit=crop", cuisine: "Vietnamese", establishment: "Fast Casual", price: "$", distance: 2.6, rating: 4.3, reviews: 198, phone: "(555) 789-0123", address: "3300 Nguyen St, Midtown, MI 48201", hours: { status: "Open", closes: "9PM", schedule: ["Mon: 10AM – 9PM", "Tue: 10AM – 9PM", "Wed: 10AM – 9PM", "Thu: 10AM – 9PM", "Fri: 10AM – 10PM", "Sat: 10AM – 10PM", "Sun: 11AM – 8PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1582878826629-29b7ad1cdc43?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1576577445504-6af96477db52?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1562967916-eb82221dfb44?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Pho", items: [{ name: "Pho Tai", desc: "Rare beef slices, rice noodles, bone broth", price: "$13" }, { name: "Pho Ga", desc: "Chicken, rice noodles, ginger broth", price: "$12" }] },
+      { cat: "Banh Mi", items: [{ name: "Classic Banh Mi", desc: "Grilled pork, pâté, pickled veg, cilantro", price: "$9" }, { name: "Lemongrass Chicken", desc: "Grilled chicken, pickled daikon, jalapeño", price: "$9" }] },
+      { cat: "Rolls", items: [{ name: "Summer Rolls", desc: "Shrimp, vermicelli, herbs, peanut sauce (2pc)", price: "$7" }, { name: "Egg Rolls", desc: "Crispy pork and vegetable rolls (3pc)", price: "$6" }] }
+    ],
+    googleReviews: [
+      { author: "Anna T.", date: "3 days ago", stars: 5, text: "The pho broth here is deeply flavorful — you can tell it's been simmering for hours. Fresh herbs and bean sprouts on the side. Perfect." },
+      { author: "Kevin L.", date: "2 weeks ago", stars: 4, text: "Banh mi is fantastic and only $9. Bread is crispy outside, soft inside. Just like the ones in Saigon." },
+      { author: "Helen W.", date: "1 month ago", stars: 4, text: "Great comfort food. Summer rolls are fresh and light. Wish they had a larger dining area." }
+    ]
+  },
+  {
+    id: 8, name: "The Smokehouse", image: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=600&h=400&fit=crop", cuisine: "American BBQ", establishment: "Sit-down", price: "$$", distance: 3.1, rating: 4.6, reviews: 305, phone: "(555) 890-1234", address: "700 Hickory Smoke Dr, Westland, MI 48185", hours: { status: "Open", closes: "10PM", schedule: ["Mon: 11AM – 10PM", "Tue: 11AM – 10PM", "Wed: 11AM – 10PM", "Thu: 11AM – 10PM", "Fri: 11AM – 11PM", "Sat: 11AM – 11PM", "Sun: 12PM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1544025162-d76694265947?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1558030006-450675393462?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1606502281004-f86613decf20?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Smoked Meats", items: [{ name: "Brisket Plate", desc: "12-hour smoked brisket, two sides", price: "$18" }, { name: "Pulled Pork", desc: "Hickory-smoked, Carolina vinegar sauce", price: "$15" }, { name: "Ribs (Half Rack)", desc: "St. Louis-style, dry rub, house BBQ sauce", price: "$22" }] },
+      { cat: "Sides", items: [{ name: "Mac & Cheese", desc: "Sharp cheddar, smoked gouda, breadcrumbs", price: "$6" }, { name: "Coleslaw", desc: "Creamy buttermilk slaw, apple cider vinegar", price: "$4" }, { name: "Cornbread", desc: "Jalapeño honey butter cornbread", price: "$4" }] }
+    ],
+    googleReviews: [
+      { author: "Steve R.", date: "4 days ago", stars: 5, text: "Best brisket in town, no contest. Perfectly smoked with a beautiful bark. The mac and cheese is dangerously good." },
+      { author: "Pat M.", date: "1 week ago", stars: 4, text: "Ribs fall right off the bone. Dry rub has great flavor. Sides are legit — the cornbread with jalapeño butter is a game changer." },
+      { author: "Nicole J.", date: "3 weeks ago", stars: 5, text: "This is what real BBQ should taste like. Pulled pork is smoky and tender. Generous portions for the price." }
+    ]
+  },
+  {
+    id: 9, name: "Athenian Grill", image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&h=400&fit=crop", cuisine: "Greek", establishment: "Pick-up", price: "$$", distance: 1.5, rating: 4.5, reviews: 178, phone: "(555) 901-2345", address: "456 Parthenon Ave, Troy, MI 48084", hours: { status: "Open", closes: "9PM", schedule: ["Mon: 11AM – 9PM", "Tue: 11AM – 9PM", "Wed: 11AM – 9PM", "Thu: 11AM – 9PM", "Fri: 11AM – 10PM", "Sat: 11AM – 10PM", "Sun: 12PM – 8PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1544250634-2fd7dcb4d8f7?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1580013759032-06b37e3bb5be?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1551248429-40975aa4de74?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Wraps", items: [{ name: "Chicken Gyro", desc: "Rotisserie chicken, tzatziki, tomato, onion", price: "$11" }, { name: "Lamb Souvlaki Wrap", desc: "Grilled lamb, feta, lettuce, red onion", price: "$13" }] },
+      { cat: "Plates", items: [{ name: "Moussaka", desc: "Layered eggplant, ground beef, béchamel", price: "$16" }, { name: "Grilled Salmon", desc: "Lemon herb salmon, Greek salad, orzo", price: "$19" }] },
+      { cat: "Starters", items: [{ name: "Hummus Plate", desc: "House-made hummus, warm pita, olives", price: "$8" }, { name: "Spanakopita", desc: "Flaky phyllo, spinach, feta filling (3pc)", price: "$9" }] }
+    ],
+    googleReviews: [
+      { author: "Maria G.", date: "6 days ago", stars: 5, text: "The chicken gyro is loaded and the tzatziki is fresh. Reminds me of the food in Athens. Spanakopita is flaky perfection." },
+      { author: "Alex P.", date: "2 weeks ago", stars: 4, text: "Great pick-up spot. Moussaka is hearty and comforting. Hummus is super smooth. Quick service too." },
+      { author: "Beth S.", date: "1 month ago", stars: 5, text: "Lamb souvlaki is perfectly seasoned and grilled. Everything tastes fresh and homemade. My new go-to for Greek food." }
+    ]
+  },
+  {
+    id: 10, name: "Dim Sum Palace", image: "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&h=400&fit=crop", cuisine: "Chinese", establishment: "Sit-down", price: "$$", distance: 2.9, rating: 4.7, reviews: 421, phone: "(555) 012-3456", address: "1888 Dragon Gate Rd, Ann Arbor, MI 48104", hours: { status: "Open", closes: "10PM", schedule: ["Mon: 10AM – 10PM", "Tue: 10AM – 10PM", "Wed: 10AM – 10PM", "Thu: 10AM – 10PM", "Fri: 10AM – 11PM", "Sat: 9AM – 11PM", "Sun: 9AM – 9PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1547592180-85f173990554?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Dim Sum", items: [{ name: "Har Gow", desc: "Crystal shrimp dumplings (4pc)", price: "$7" }, { name: "Siu Mai", desc: "Pork and shrimp dumplings (4pc)", price: "$7" }, { name: "Char Siu Bao", desc: "BBQ pork steamed buns (3pc)", price: "$6" }] },
+      { cat: "Wok", items: [{ name: "Kung Pao Chicken", desc: "Peanuts, dried chili, Sichuan peppercorn", price: "$15" }, { name: "Mapo Tofu", desc: "Silky tofu, spicy bean paste, ground pork", price: "$13" }] },
+      { cat: "Noodles", items: [{ name: "Dan Dan Noodles", desc: "Spicy sesame sauce, minced pork, scallion", price: "$12" }, { name: "Chow Fun", desc: "Wide rice noodles, beef, bean sprouts", price: "$14" }] }
+    ],
+    googleReviews: [
+      { author: "Linda C.", date: "3 days ago", stars: 5, text: "Best dim sum in the area. Har gow wrappers are translucent and the shrimp is plump. Char siu bao is fluffy and sweet." },
+      { author: "Brian Z.", date: "2 weeks ago", stars: 5, text: "Mapo tofu has the perfect numbing spice. Dan dan noodles are rich and savory. Authentic Sichuan flavors." },
+      { author: "Jenny H.", date: "1 month ago", stars: 4, text: "Great variety and quality. Weekend dim sum gets busy so arrive early. The chow fun is smoky and delicious." }
+    ]
+  },
+  {
+    id: 11, name: "Waffle & Co.", image: "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=600&h=400&fit=crop", cuisine: "American", establishment: "Fast Casual", price: "$", distance: 0.5, rating: 4.2, reviews: 134, phone: "(555) 111-2222", address: "225 Brunch Blvd, Royal Oak, MI 48067", hours: { status: "Open", closes: "3PM", schedule: ["Mon: 7AM – 3PM", "Tue: 7AM – 3PM", "Wed: 7AM – 3PM", "Thu: 7AM – 3PM", "Fri: 7AM – 4PM", "Sat: 8AM – 4PM", "Sun: 8AM – 3PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1568051243851-f9b136146e97?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Sweet Waffles", items: [{ name: "Classic Belgian", desc: "Pearl sugar waffle, whipped cream, berries", price: "$9" }, { name: "Nutella Dream", desc: "Hazelnut spread, banana, powdered sugar", price: "$11" }] },
+      { cat: "Savory Waffles", items: [{ name: "Chicken & Waffle", desc: "Fried chicken, maple syrup, hot sauce", price: "$14" }, { name: "Breakfast Waffle", desc: "Bacon, egg, cheddar, maple drizzle", price: "$12" }] },
+      { cat: "Drinks", items: [{ name: "Cold Brew", desc: "House-roasted, smooth and bold", price: "$5" }, { name: "Fresh OJ", desc: "Squeezed to order", price: "$4" }] }
+    ],
+    googleReviews: [
+      { author: "Jake R.", date: "1 week ago", stars: 4, text: "Chicken and waffle combo is legit. Waffle is crispy outside, fluffy inside. The maple hot sauce combo is genius." },
+      { author: "Samantha L.", date: "3 weeks ago", stars: 4, text: "Cute spot for brunch. Belgian waffle with berries was lovely. Coffee is solid too. Gets crowded on weekends." },
+      { author: "Daniel T.", date: "2 months ago", stars: 5, text: "Best waffles in town, no question. The Nutella Dream is dangerously delicious. Quick service for a fast casual place." }
+    ]
+  },
+  {
+    id: 12, name: "Marrakech Nights", image: "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=600&h=400&fit=crop", cuisine: "Moroccan", establishment: "Sit-down", price: "$$$", distance: 5.0, rating: 4.8, reviews: 267, phone: "(555) 333-4444", address: "510 Medina Ct, Farmington Hills, MI 48334", hours: { status: "Closed", opens: "5PM", schedule: ["Mon: Closed", "Tue: 5PM – 10PM", "Wed: 5PM – 10PM", "Thu: 5PM – 10PM", "Fri: 5PM – 11PM", "Sat: 4PM – 11PM", "Sun: 4PM – 9:30PM"] },
+    photos: [
+      "https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1541518763669-27fef04b14ea?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1540914124281-342587941389?w=800&fit=crop",
+      "https://images.unsplash.com/photo-1523905330026-b8bd1f5f320e?w=800&fit=crop"
+    ],
+    menu: [
+      { cat: "Starters", items: [{ name: "Harira Soup", desc: "Tomato, lentil, chickpea, warm spices", price: "$8" }, { name: "Zaalouk", desc: "Smoky eggplant and tomato dip, warm bread", price: "$9" }] },
+      { cat: "Tagines", items: [{ name: "Chicken Tagine", desc: "Preserved lemon, olives, saffron, couscous", price: "$22" }, { name: "Lamb Tagine", desc: "Slow-braised lamb, prunes, almonds, honey", price: "$26" }] },
+      { cat: "Desserts", items: [{ name: "Baklava", desc: "Honey-soaked phyllo, pistachios (3pc)", price: "$8" }, { name: "Mint Tea", desc: "Traditional Moroccan green tea with fresh mint", price: "$4" }] }
+    ],
+    googleReviews: [
+      { author: "Omar A.", date: "5 days ago", stars: 5, text: "The lamb tagine is extraordinary — falling-apart tender with the perfect sweet and savory balance. Decor transports you to Marrakech." },
+      { author: "Sophie M.", date: "2 weeks ago", stars: 5, text: "A magical dining experience. Chicken tagine with preserved lemons is bursting with flavor. Mint tea service is beautiful." },
+      { author: "Peter K.", date: "1 month ago", stars: 4, text: "Harira soup is the best I've had. Baklava is crispy and not overly sweet. Cozy atmosphere with beautiful lanterns." }
+    ]
+  }
+];
+
+const cuisines = ["Japanese","Mexican","Italian","Korean","Indian","French","Vietnamese","American BBQ","Greek","Chinese","American","Moroccan"];
+const establishments = ["Sit-down","Food Truck","Fast Casual","Pick-up"];
+
+let maxDistance = 5;
+let selectedCuisines = new Set();
+let selectedEstablishments = new Set();
+let savedRestaurants = [];
+let dismissedIds = new Set();
+let activeDropdown = null;
+let currentSort = 'default';
+let carouselIndex = 0;
+let carouselTotal = 0;
+let searchQuery = '';
+let hoursFilter = 'all';
+let minRating = 0;
+
+function initTags() {
+  ['cuisineTags', 'cuisineTagsFull'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    cuisines.forEach(c => {
+      const tag = document.createElement('div');
+      tag.className = 'tag-option';
+      tag.textContent = c;
+      tag.onclick = () => tag.classList.toggle('selected');
+      grid.appendChild(tag);
+    });
+  });
+  ['establishmentTags', 'establishmentTagsFull'].forEach(gridId => {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    establishments.forEach(e => {
+      const tag = document.createElement('div');
+      tag.className = 'tag-option';
+      tag.textContent = e;
+      tag.onclick = () => tag.classList.toggle('selected');
+      grid.appendChild(tag);
+    });
+  });
+  const distSliderFull = document.getElementById('distanceSliderFull');
+  const distValueFull = document.getElementById('distanceValueFull');
+  if (distSliderFull) {
+    distSliderFull.addEventListener('input', () => { distValueFull.textContent = distSliderFull.value + ' mi'; });
+  }
+}
+
+document.querySelectorAll('.filter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const filter = chip.dataset.filter;
+    const dropdown = document.getElementById(filter + 'Dropdown');
+    const overlay = document.getElementById('filterOverlay');
+    if (activeDropdown === dropdown) { closeDropdowns(); return; }
+    closeDropdowns();
+    dropdown.classList.add('show');
+    overlay.classList.add('show');
+    activeDropdown = dropdown;
+  });
+});
+
+document.getElementById('filterOverlay').addEventListener('click', closeDropdowns);
+
+function closeDropdowns() {
+  document.querySelectorAll('.filter-dropdown').forEach(d => d.classList.remove('show'));
+  document.getElementById('filterOverlay').classList.remove('show');
+  activeDropdown = null;
+}
+
+const distSlider = document.getElementById('distanceSlider');
+const distValue = document.getElementById('distanceValue');
+distSlider.addEventListener('input', () => { distValue.textContent = distSlider.value + ' mi'; });
+
+function applyDistance() {
+  maxDistance = parseInt(distSlider.value);
+  document.getElementById('distanceLabel').textContent = 'Within ' + maxDistance + ' mi';
+  document.getElementById('distanceChip').classList.add('active');
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function applyCuisine() {
+  selectedCuisines.clear();
+  document.querySelectorAll('#cuisineTags .tag-option.selected').forEach(t => selectedCuisines.add(t.textContent));
+  const chip = document.getElementById('cuisineChip');
+  chip.classList.toggle('active', selectedCuisines.size > 0);
+  if (selectedCuisines.size > 0) {
+    chip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> ${selectedCuisines.size} cuisine${selectedCuisines.size > 1 ? 's' : ''}`;
+  } else {
+    chip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Cuisine`;
+  }
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function applyEstablishment() {
+  selectedEstablishments.clear();
+  document.querySelectorAll('#establishmentTags .tag-option.selected').forEach(t => selectedEstablishments.add(t.textContent));
+  const chip = document.getElementById('establishmentChip');
+  chip.classList.toggle('active', selectedEstablishments.size > 0);
+  if (selectedEstablishments.size > 0) {
+    chip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> ${selectedEstablishments.size} type${selectedEstablishments.size > 1 ? 's' : ''}`;
+  } else {
+    chip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Type`;
+  }
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function selectSort(el) {
+  const parent = el.closest('.tag-grid');
+  parent.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function applySort() {
+  const selected = document.querySelector('#sortOptions .tag-option.selected');
+  if (selected) currentSort = selected.dataset.sort;
+  const chip = document.getElementById('sortChip');
+  chip.classList.toggle('active', currentSort !== 'default');
+  const labels = { 'default': 'Sort', 'distance-asc': 'Nearest', 'distance-desc': 'Farthest', 'price-asc': 'Price $-$$$$', 'price-desc': 'Price $$$$-$', 'rating': 'Top Rated' };
+  chip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 4l3 3 3-3"/><path d="M6 7v10"/></svg> ${labels[currentSort] || 'Sort'}`;
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function selectHours(el) {
+  const parent = el.closest('.tag-grid');
+  parent.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function applyHours() {
+  const selected = document.querySelector('#hoursOptions .tag-option.selected');
+  if (selected) hoursFilter = selected.dataset.hours;
+  const chip = document.getElementById('hoursChip');
+  chip.classList.toggle('active', hoursFilter !== 'all');
+  const labels = { 'all': 'Hours', 'open': 'Open Now', 'closed': 'Closed' };
+  chip.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ${labels[hoursFilter] || 'Hours'}`;
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function selectRating(el) {
+  const parent = el.closest('.tag-grid');
+  parent.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function applyRating() {
+  const selected = document.querySelector('#ratingOptions .tag-option.selected');
+  if (selected) minRating = parseFloat(selected.dataset.rating);
+  const chip = document.getElementById('ratingChip');
+  chip.classList.toggle('active', minRating > 0);
+  const label = minRating > 0 ? minRating + '+' : 'Rating';
+  chip.innerHTML = `<svg viewBox="0 0 24 24" style="fill:${minRating > 0 ? '#fff' : '#F5A623'};stroke:none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ${label}`;
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function toggleFilterPanel() {
+  const dropdown = document.getElementById('filterPanelFull');
+  const overlay = document.getElementById('filterOverlay');
+  if (activeDropdown === dropdown) { closeDropdowns(); return; }
+  closeDropdowns();
+  const dsFull = document.getElementById('distanceSliderFull');
+  const dvFull = document.getElementById('distanceValueFull');
+  dsFull.value = maxDistance;
+  dvFull.textContent = maxDistance + ' mi';
+  dropdown.classList.add('show');
+  overlay.classList.add('show');
+  activeDropdown = dropdown;
+}
+
+function hasActiveFilters() {
+  return maxDistance > 5 || selectedCuisines.size > 0 || selectedEstablishments.size > 0 ||
+    currentSort !== 'default' || hoursFilter !== 'all' || minRating > 0;
+}
+
+function updateClearFiltersVisibility() {
+  const btn = document.getElementById('feedClearFilters');
+  if (btn) btn.classList.toggle('visible', hasActiveFilters());
+}
+
+function clearAllFilters() {
+  // Reset distance
+  maxDistance = 5;
+  document.getElementById('distanceSliderFull').value = 5;
+  document.getElementById('distanceValueFull').textContent = '5 mi';
+  document.getElementById('distanceSlider').value = 5;
+  document.getElementById('distanceValue').textContent = '5 mi';
+  document.getElementById('distanceLabel').textContent = 'Within 5 mi';
+  document.getElementById('distanceChip').classList.add('active');
+
+  // Reset cuisine
+  selectedCuisines.clear();
+  document.querySelectorAll('#cuisineTagsFull .tag-option').forEach(t => t.classList.remove('selected'));
+  document.querySelectorAll('#cuisineTags .tag-option').forEach(t => t.classList.remove('selected'));
+  const cChip = document.getElementById('cuisineChip');
+  cChip.classList.remove('active');
+  cChip.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Cuisine';
+
+  // Reset establishment
+  selectedEstablishments.clear();
+  document.querySelectorAll('#establishmentTagsFull .tag-option').forEach(t => t.classList.remove('selected'));
+  document.querySelectorAll('#establishmentTags .tag-option').forEach(t => t.classList.remove('selected'));
+  const eChip = document.getElementById('establishmentChip');
+  eChip.classList.remove('active');
+  eChip.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Type';
+
+  // Reset sort
+  currentSort = 'default';
+  document.querySelectorAll('#sortOptionsFull .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.sort === 'default'));
+  document.querySelectorAll('#sortOptions .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.sort === 'default'));
+  const sChip = document.getElementById('sortChip');
+  sChip.classList.remove('active');
+  sChip.innerHTML = '<svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 4l3 3 3-3"/><path d="M6 7v10"/></svg> Sort';
+
+  // Reset hours
+  hoursFilter = 'all';
+  document.querySelectorAll('#hoursOptionsFull .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.hours === 'all'));
+  document.querySelectorAll('#hoursOptions .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.hours === 'all'));
+  const hChip = document.getElementById('hoursChip');
+  hChip.classList.remove('active');
+  hChip.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Hours';
+
+  // Reset rating
+  minRating = 0;
+  document.querySelectorAll('#ratingOptionsFull .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.rating === '0'));
+  document.querySelectorAll('#ratingOptions .tag-option').forEach(t => t.classList.toggle('selected', t.dataset.rating === '0'));
+  const rChip = document.getElementById('ratingChip');
+  rChip.classList.remove('active');
+  rChip.innerHTML = '<svg viewBox="0 0 24 24" style="fill:#F5A623;stroke:none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Rating';
+
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function applyFullFilter() {
+  maxDistance = parseInt(document.getElementById('distanceSliderFull').value);
+  document.getElementById('distanceLabel').textContent = 'Within ' + maxDistance + ' mi';
+  document.getElementById('distanceSlider').value = maxDistance;
+  document.getElementById('distanceValue').textContent = maxDistance + ' mi';
+  document.getElementById('distanceChip').classList.add('active');
+
+  selectedCuisines.clear();
+  document.querySelectorAll('#cuisineTagsFull .tag-option.selected').forEach(t => selectedCuisines.add(t.textContent));
+  const cChip = document.getElementById('cuisineChip');
+  cChip.classList.toggle('active', selectedCuisines.size > 0);
+  if (selectedCuisines.size > 0) {
+    cChip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> ${selectedCuisines.size} cuisine${selectedCuisines.size > 1 ? 's' : ''}`;
+  } else {
+    cChip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Cuisine`;
+  }
+
+  selectedEstablishments.clear();
+  document.querySelectorAll('#establishmentTagsFull .tag-option.selected').forEach(t => selectedEstablishments.add(t.textContent));
+  const eChip = document.getElementById('establishmentChip');
+  eChip.classList.toggle('active', selectedEstablishments.size > 0);
+  if (selectedEstablishments.size > 0) {
+    eChip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> ${selectedEstablishments.size} type${selectedEstablishments.size > 1 ? 's' : ''}`;
+  } else {
+    eChip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Type`;
+  }
+
+  const sortSel = document.querySelector('#sortOptionsFull .tag-option.selected');
+  if (sortSel) currentSort = sortSel.dataset.sort;
+  const sChip = document.getElementById('sortChip');
+  sChip.classList.toggle('active', currentSort !== 'default');
+  const labels = { 'default': 'Sort', 'distance-asc': 'Nearest', 'distance-desc': 'Farthest', 'price-asc': 'Price $-$$$$', 'price-desc': 'Price $$$$-$', 'rating': 'Top Rated' };
+  sChip.innerHTML = `<svg viewBox="0 0 24 24"><path d="M11 5h10M11 9h7M11 13h4"/><path d="M3 4l3 3 3-3"/><path d="M6 7v10"/></svg> ${labels[currentSort] || 'Sort'}`;
+
+  // Hours
+  const hoursSel = document.querySelector('#hoursOptionsFull .tag-option.selected');
+  if (hoursSel) hoursFilter = hoursSel.dataset.hours;
+  const hChip = document.getElementById('hoursChip');
+  hChip.classList.toggle('active', hoursFilter !== 'all');
+  const hLabels = { 'all': 'Hours', 'open': 'Open Now', 'closed': 'Closed' };
+  hChip.innerHTML = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> ${hLabels[hoursFilter] || 'Hours'}`;
+
+  // Rating
+  const ratingSel = document.querySelector('#ratingOptionsFull .tag-option.selected');
+  if (ratingSel) minRating = parseFloat(ratingSel.dataset.rating);
+  const rChip = document.getElementById('ratingChip');
+  rChip.classList.toggle('active', minRating > 0);
+  const rLabel = minRating > 0 ? minRating + '+' : 'Rating';
+  rChip.innerHTML = `<svg viewBox="0 0 24 24" style="fill:${minRating > 0 ? '#fff' : '#F5A623'};stroke:none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> ${rLabel}`;
+
+  closeDropdowns();
+  renderFeed();
+  updateClearFiltersVisibility();
+}
+
+function priceToNum(p) { return p.length; }
+
+function sortRestaurants(list) {
+  const sorted = [...list];
+  switch(currentSort) {
+    case 'distance-asc': sorted.sort((a,b) => a.distance - b.distance); break;
+    case 'distance-desc': sorted.sort((a,b) => b.distance - a.distance); break;
+    case 'price-asc': sorted.sort((a,b) => priceToNum(a.price) - priceToNum(b.price)); break;
+    case 'price-desc': sorted.sort((a,b) => priceToNum(b.price) - priceToNum(a.price)); break;
+    case 'rating': sorted.sort((a,b) => b.rating - a.rating); break;
+  }
+  return sorted;
+}
+
+function getFilteredRestaurants() {
+  return restaurants.filter(r => {
+    if (dismissedIds.has(r.id)) return false;
+    if (savedRestaurants.find(s => s.id === r.id)) return false;
+    if (r.distance > maxDistance) return false;
+    if (selectedCuisines.size > 0 && !selectedCuisines.has(r.cuisine)) return false;
+    if (selectedEstablishments.size > 0 && !selectedEstablishments.has(r.establishment)) return false;
+    if (hoursFilter === 'open' && r.hours.status !== 'Open') return false;
+    if (hoursFilter === 'closed' && r.hours.status !== 'Closed') return false;
+    if (minRating > 0 && r.rating < minRating) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const nameMatch = r.name.toLowerCase().includes(q);
+      const cuisineMatch = r.cuisine.toLowerCase().includes(q);
+      const menuMatch = r.menu && r.menu.some(cat =>
+        cat.items.some(item => item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q))
+      );
+      if (!nameMatch && !cuisineMatch && !menuMatch) return false;
+    }
+    return true;
+  });
+}
+
+function renderFeed() {
+  const container = document.getElementById('cardContainer');
+  const filtered = sortRestaurants(getFilteredRestaurants());
+  const emptyFeed = document.getElementById('emptyFeed');
+  container.innerHTML = '';
+
+  if (filtered.length === 0) { emptyFeed.classList.add('visible'); return; }
+  emptyFeed.classList.remove('visible');
+
+  filtered.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'restaurant-card';
+    card.id = 'card-' + r.id;
+    card.innerHTML = `
+      <div class="card-image-wrap" onclick="openProfile(${r.id})" style="cursor:pointer">
+        <img src="${r.image}" alt="${r.name}" loading="lazy">
+        <div class="card-badge">
+          <svg viewBox="0 0 24 24" style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${r.distance} mi away
+        </div>
+      </div>
+      <div class="card-body" onclick="openProfile(${r.id})" style="cursor:pointer">
+        <h2 class="card-name">${r.name}</h2>
+        <div class="card-meta">
+          <span class="meta-tag">${r.cuisine}</span>
+          <span class="meta-tag">${r.establishment}</span>
+          <span class="meta-tag">${r.price}</span>
+        </div>
+        <div class="card-details">
+          <div class="detail card-rating">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            ${r.rating}
+          </div>
+          <div class="detail">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            ${r.reviews} reviews
+          </div>
+          <div class="detail card-open-close">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span class="${r.hours.status === 'Open' ? 'card-status-open' : 'card-status-closed'}">${r.hours.status}</span>
+          </div>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="action-btn heart" onclick="heartRestaurant(${r.id})" title="Save">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <button class="action-btn reject" onclick="rejectRestaurant(${r.id})" title="Pass">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <button class="action-btn share" onclick="shareCard(${r.id})" title="Share">
+          <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function heartRestaurant(id) {
+  const r = restaurants.find(r => r.id === id);
+  if (!r || savedRestaurants.find(s => s.id === id)) return;
+  const card = document.getElementById('card-' + id);
+  card.classList.add('hearting');
+  const overlay = document.createElement('div');
+  overlay.className = 'heart-overlay';
+  overlay.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>';
+  card.querySelector('.card-image-wrap').appendChild(overlay);
+  savedRestaurants.push(r);
+  updateBadge();
+  setTimeout(() => { card.classList.add('removing'); setTimeout(() => renderFeed(), 350); }, 400);
+}
+
+function rejectRestaurant(id) {
+  dismissedIds.add(id);
+  const card = document.getElementById('card-' + id);
+  card.classList.add('removing');
+  setTimeout(() => renderFeed(), 350);
+}
+
+function updateBadge() {
+  const badge = document.getElementById('navBadge');
+  badge.style.display = savedRestaurants.length > 0 ? 'flex' : 'none';
+  badge.textContent = savedRestaurants.length;
+}
+
+function renderSaved() {
+  const grid = document.getElementById('savedGrid');
+  const empty = document.getElementById('emptySaved');
+  const count = document.getElementById('savedCount');
+  count.textContent = savedRestaurants.length + ' place' + (savedRestaurants.length !== 1 ? 's' : '');
+  if (savedRestaurants.length === 0) { grid.innerHTML = ''; empty.style.display = 'flex'; return; }
+  empty.style.display = 'none';
+  grid.innerHTML = '';
+  savedRestaurants.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'saved-card';
+    card.innerHTML = `
+      <img class="saved-card-img" src="${r.image}" alt="${r.name}" loading="lazy" onclick="openProfile(${r.id})" style="cursor:pointer">
+      <div class="saved-card-body">
+        <div class="saved-card-name" onclick="openProfile(${r.id})" style="cursor:pointer">${r.name}</div>
+        <div class="saved-card-info">${r.cuisine} &middot; ${r.price} &middot; ${r.distance} mi</div>
+        <button class="saved-card-remove" onclick="removeSaved(${r.id})">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Remove
+        </button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function removeSaved(id) {
+  savedRestaurants = savedRestaurants.filter(r => r.id !== id);
+  dismissedIds.add(id);
+  updateBadge();
+  renderSaved();
+}
+
+function showScreen(screen) {
+  const feed = document.getElementById('feed');
+  const saved = document.getElementById('savedScreen');
+  const header = document.getElementById('header');
+  const navDiscover = document.getElementById('navDiscover');
+  const navSaved = document.getElementById('navSaved');
+  if (screen === 'discover') {
+    feed.classList.remove('hidden'); saved.classList.remove('visible'); header.style.display = '';
+    navDiscover.classList.add('active'); navSaved.classList.remove('active');
+    renderFeed();
+  } else {
+    feed.classList.add('hidden'); saved.classList.add('visible'); header.style.display = 'none';
+    navDiscover.classList.remove('active'); navSaved.classList.add('active');
+    renderSaved();
+  }
+}
+
+function resetFeed() { dismissedIds.clear(); renderFeed(); }
+
+/* ── Profile panel ── */
+function openProfile(id) {
+  const r = restaurants.find(x => x.id === id);
+  if (!r) return;
+
+  document.getElementById('profileBarTitle').textContent = r.name;
+
+  // Carousel
+  carouselIndex = 0;
+  carouselTotal = r.photos.length;
+  const track = document.getElementById('carouselTrack');
+  track.innerHTML = r.photos.map(p => `<img src="${p}" alt="${r.name}" loading="lazy">`).join('');
+  track.style.transform = 'translateX(0)';
+  const dots = document.getElementById('carouselDots');
+  dots.innerHTML = r.photos.map((_, i) => `<button class="carousel-dot${i === 0 ? ' active' : ''}" onclick="goToSlide(${i})"></button>`).join('');
+
+  // Stars helper
+  const starsHtml = (n) => {
+    let s = '';
+    for (let i = 1; i <= 5; i++) s += `<svg viewBox="0 0 24 24"${i > n ? ' class="empty"' : ''}><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+    return s;
+  };
+
+  // Body
+  const body = document.getElementById('profileBody');
+  body.innerHTML = `
+    <h1 class="profile-name">${r.name}</h1>
+    <div class="profile-tags">
+      <span class="meta-tag">${r.cuisine}</span>
+      <span class="meta-tag">${r.establishment}</span>
+      <span class="meta-tag">${r.price}</span>
+    </div>
+    <div class="profile-bio">
+      <div class="profile-bio-stats">
+        <div class="profile-bio-stat">
+          <svg class="bio-rating-icon" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span class="bio-rating-val">${r.rating}</span>
+        </div>
+        <div class="profile-bio-stat">
+          <svg class="bio-reviews-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          ${r.reviews} reviews
+        </div>
+        <div class="profile-bio-stat">
+          <svg class="bio-distance-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${r.distance} mi
+        </div>
+      </div>
+      <div class="profile-bio-row">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        ${r.address}
+      </div>
+      <div class="profile-bio-row" style="flex-direction:column;align-items:stretch;gap:0;">
+        <button class="hours-toggle" onclick="toggleHoursSchedule(this)">
+          <span class="hours-toggle-left">
+            <svg class="hours-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>${r.hours.status === 'Open'
+              ? '<span class="hours-status-open">Open</span> &#x22C5; Closes ' + r.hours.closes
+              : '<span class="hours-status-closed">Closed</span> &#x22C5; Opens ' + r.hours.opens}</span>
+          </span>
+          <svg class="hours-chevron" viewBox="0 0 12 8"><polyline points="1 1 6 6 11 1"/></svg>
+        </button>
+        <div class="hours-schedule" id="hoursSchedule-${r.id}">
+          ${r.hours.schedule.map(h => {
+            const parts = h.split(': ');
+            return '<div class="hours-schedule-row"><span class="hours-schedule-day">' + parts[0] + '</span><span>' + parts[1] + '</span></div>';
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <h3 class="profile-section-title">Menu</h3>
+    <div class="menu-grid">
+      ${r.menu.map(cat => `
+        <div class="menu-category">${cat.cat}</div>
+        ${cat.items.map(item => `
+          <div class="menu-item">
+            <div class="menu-item-info">
+              <div class="menu-item-name">${item.name}</div>
+              <div class="menu-item-desc">${item.desc}</div>
+            </div>
+            <div class="menu-item-price">${item.price}</div>
+          </div>
+        `).join('')}
+      `).join('')}
+    </div>
+
+    <h3 class="profile-section-title">Reviews from Google</h3>
+    <div class="reviews-list">
+      ${r.googleReviews.map(rev => `
+        <div class="review-card">
+          <div class="review-header">
+            <div class="review-author">
+              <div class="review-avatar">${rev.author.split(' ').map(w => w[0]).join('')}</div>
+              <div>
+                <div class="review-name">${rev.author}</div>
+                <div class="review-date">${rev.date}</div>
+              </div>
+            </div>
+            <div class="review-stars">${starsHtml(rev.stars)}</div>
+          </div>
+          <div class="review-text">${rev.text}</div>
+          <div class="review-source">
+            <svg viewBox="0 0 24 24" style="fill:var(--text-tertiary);stroke:none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            Google Reviews
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Action bar — set up heart/x/order buttons for this restaurant
+  currentProfileId = r.id;
+  document.getElementById('orderCallBtn').onclick = function(e) { e.stopPropagation(); window.location.href = 'tel:' + r.phone; };
+  document.getElementById('profileHeartBtn').onclick = function() { heartFromProfile(r.id); };
+  document.getElementById('profileXBtn').onclick = function() { rejectFromProfile(r.id); };
+  document.getElementById('profileActionBar').classList.add('visible');
+  closeOrderMenu();
+
+  // Open panel
+  document.getElementById('profilePanel').classList.add('open');
+  document.getElementById('profileOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProfile() {
+  document.getElementById('profilePanel').classList.remove('open');
+  document.getElementById('profileOverlay').classList.remove('open');
+  document.getElementById('profileActionBar').classList.remove('visible');
+  closeOrderMenu();
+  document.body.style.overflow = '';
+}
+
+let currentProfileId = null;
+
+function toggleHoursSchedule(btn) {
+  const schedule = btn.nextElementSibling;
+  const isOpen = schedule.classList.contains('visible');
+  schedule.classList.toggle('visible');
+  btn.classList.toggle('expanded');
+}
+
+function toggleOrderMenu() {
+  const popup = document.getElementById('orderMenuPopup');
+  const overlay = document.getElementById('orderMenuOverlay');
+  const isOpen = popup.classList.contains('visible');
+  if (isOpen) {
+    closeOrderMenu();
+  } else {
+    popup.classList.add('visible');
+    overlay.classList.add('visible');
+  }
+}
+
+function closeOrderMenu() {
+  document.getElementById('orderMenuPopup').classList.remove('visible');
+  document.getElementById('orderMenuOverlay').classList.remove('visible');
+}
+
+function openRestaurantWebsite() {
+  const r = restaurants.find(x => x.id === currentProfileId);
+  if (r && r.website) {
+    window.open(r.website, '_blank');
+  } else {
+    window.open('https://google.com/search?q=' + encodeURIComponent(r ? r.name : ''), '_blank');
+  }
+}
+
+function heartFromProfile(id) {
+  const r = restaurants.find(x => x.id === id);
+  if (!r || savedRestaurants.find(s => s.id === id)) return;
+  savedRestaurants.push(r);
+  updateBadge();
+  closeProfile();
+  renderFeed();
+}
+
+function rejectFromProfile(id) {
+  dismissedIds.add(id);
+  closeProfile();
+  renderFeed();
+}
+
+function shareRestaurant() {
+  const r = restaurants.find(x => x.id === currentProfileId);
+  if (!r) return;
+  if (navigator.share) {
+    navigator.share({ title: r.name, text: `Check out ${r.name} — ${r.cuisine} ${r.establishment} (${r.price})`, url: window.location.href }).catch(() => {});
+  } else {
+    const text = `${r.name} — ${r.cuisine} ${r.establishment} (${r.price})`;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('profileShareBtn');
+      btn.style.borderColor = 'var(--accent)';
+      setTimeout(() => { btn.style.borderColor = ''; }, 1200);
+    }).catch(() => {});
+  }
+}
+
+// ── Search functions ──
+let searchDebounceTimer = null;
+
+function openSearch() {
+  const overlay = document.getElementById('searchOverlay');
+  const input = document.getElementById('searchInput');
+  overlay.classList.add('visible');
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeSearch() {
+  const overlay = document.getElementById('searchOverlay');
+  const input = document.getElementById('searchInput');
+  const hint = document.getElementById('searchResultsHint');
+  const clearBtn = document.getElementById('searchClearBtn');
+  overlay.classList.remove('visible');
+  input.value = '';
+  searchQuery = '';
+  hint.classList.remove('visible');
+  clearBtn.classList.remove('visible');
+  renderFeed();
+  updateFeedLabel();
+}
+
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  const hint = document.getElementById('searchResultsHint');
+  const clearBtn = document.getElementById('searchClearBtn');
+  input.value = '';
+  searchQuery = '';
+  hint.classList.remove('visible');
+  clearBtn.classList.remove('visible');
+  input.focus();
+  renderFeed();
+  updateFeedLabel();
+}
+
+function handleSearchOverlayClick(e) {
+  if (e.target === document.getElementById('searchOverlay')) {
+    closeSearch();
+  }
+}
+
+function updateFeedLabel() {
+  const label = document.getElementById('feedLabel');
+  if (searchQuery) {
+    const count = sortRestaurants(getFilteredRestaurants()).length;
+    label.textContent = `Results for "${searchQuery}" (${count})`;
+  } else {
+    label.textContent = 'Restaurants near you';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const input = document.getElementById('searchInput');
+  if (input) {
+    input.addEventListener('input', function() {
+      const val = this.value.trim();
+      const clearBtn = document.getElementById('searchClearBtn');
+      const hint = document.getElementById('searchResultsHint');
+
+      clearBtn.classList.toggle('visible', val.length > 0);
+
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        searchQuery = val;
+        renderFeed();
+        updateFeedLabel();
+
+        const count = sortRestaurants(getFilteredRestaurants()).length;
+        if (val.length > 0) {
+          hint.textContent = count > 0
+            ? `${count} restaurant${count !== 1 ? 's' : ''} with matching menu items`
+            : 'No restaurants match your search';
+          hint.classList.add('visible');
+        } else {
+          hint.classList.remove('visible');
+        }
+      }, 250);
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('searchOverlay').classList.remove('visible');
+      }
+      if (e.key === 'Escape') {
+        closeSearch();
+      }
+    });
+  }
+});
+
+function shareCard(id) {
+  event.stopPropagation();
+  const r = restaurants.find(x => x.id === id);
+  if (!r) return;
+  if (navigator.share) {
+    navigator.share({ title: r.name, text: `Check out ${r.name} — ${r.cuisine} ${r.establishment} (${r.price})`, url: window.location.href }).catch(() => {});
+  } else {
+    const text = `${r.name} — ${r.cuisine} ${r.establishment} (${r.price})`;
+    navigator.clipboard.writeText(text).then(() => {
+      const card = document.getElementById('card-' + id);
+      const btn = card.querySelector('.action-btn.share');
+      if (btn) { btn.style.borderColor = 'var(--accent)'; setTimeout(() => { btn.style.borderColor = ''; }, 1200); }
+    }).catch(() => {});
+  }
+}
+
+function goToSlide(i) {
+  carouselIndex = i;
+  document.getElementById('carouselTrack').style.transform = `translateX(-${i * 100}%)`;
+  document.querySelectorAll('#carouselDots .carousel-dot').forEach((d, idx) => d.classList.toggle('active', idx === i));
+}
+
+function carouselNext() {
+  goToSlide((carouselIndex + 1) % carouselTotal);
+}
+
+function carouselPrev() {
+  goToSlide((carouselIndex - 1 + carouselTotal) % carouselTotal);
+}
+
+// Touch swipe for carousel
+(function() {
+  let startX = 0;
+  const carousel = document.getElementById('profileCarousel');
+  carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+  carousel.addEventListener('touchend', e => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) carouselNext(); else carouselPrev();
+    }
+  }, { passive: true });
+})();
+
+initTags();
+renderFeed();
+
+// Drag-to-scroll for filter bar
+(function() {
+  const bar = document.getElementById('filterBar');
+  let isDown = false, startX, scrollLeft;
+  bar.addEventListener('mousedown', e => {
+    if (e.target.closest('.filter-chip')) return;
+    isDown = true; bar.classList.add('dragging');
+    startX = e.pageX - bar.offsetLeft; scrollLeft = bar.scrollLeft;
+  });
+  bar.addEventListener('mouseleave', () => { isDown = false; bar.classList.remove('dragging'); });
+  bar.addEventListener('mouseup', () => { isDown = false; bar.classList.remove('dragging'); });
+  bar.addEventListener('mousemove', e => {
+    if (!isDown) return; e.preventDefault();
+    bar.scrollLeft = scrollLeft - (e.pageX - bar.offsetLeft - startX);
+  });
+})();
+
+// Auto-open views based on URL params (for Figma capture)
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const view = params.get('view');
+  if (view === 'profile') {
+    const id = parseInt(params.get('id')) || 1;
+    const scrollTo = parseInt(params.get('scroll')) || 0;
+    setTimeout(() => {
+      openProfile(id);
+      if (scrollTo > 0) {
+        setTimeout(() => { document.getElementById('profilePanel').scrollTop = scrollTo; }, 600);
+      }
+    }, 500);
+  } else if (view === 'search') {
+    setTimeout(() => openSearch(), 500);
+  } else if (view === 'saved') {
+    // Pre-populate saved restaurants for capture
+    [1, 3, 4, 6, 8, 10].forEach(id => {
+      const r = restaurants.find(x => x.id === id);
+      if (r && !savedRestaurants.find(s => s.id === id)) savedRestaurants.push(r);
+    });
+    updateBadge();
+    setTimeout(() => showScreen('saved'), 500);
+  }
+})();
+</script>
+</body>
+</html>
